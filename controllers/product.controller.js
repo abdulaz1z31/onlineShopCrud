@@ -1,12 +1,23 @@
 import pool from "../db.js";
 
 export const getAllProducts = async (req, res, next) => {
-  try {
-    const products = await pool.query("SELECT * FROM products");
-    res.status(200).json(products.rows);
-  } catch (err) {
-    next(err);
-  }
+    try {
+        const { page, limit } = req.pagination;
+        const ofset_c = (page - 1) * limit;
+
+        const products = await pool.query(
+            "SELECT * FROM products LIMIT $1 OFFSET $2",
+            [limit, ofset_c]
+        );
+
+        if (products.rows.length === 0) {
+            return res.status(404).send("Products not found");
+        }
+
+        res.status(200).json(products.rows);
+    } catch (err) {
+        next(err);
+    }
 };
 
 export const addNewProduct = async (req, res, next) => {

@@ -28,12 +28,23 @@ export const addNewBasket = async (req, res, next) => {
 };
 
 export const getAllBaskets = async (req, res, next) => {
-  try {
-    const baskets = await pool.query("SELECT * FROM basket");
-    res.status(200).json(baskets.rows);
-  } catch (err) {
-    next(err);
-  }
+    try {
+        const { page, limit } = req.pagination;
+        const ofset_c = (page - 1) * limit;
+
+        const baskets = await pool.query(
+            "SELECT * FROM basket LIMIT $1 OFFSET $2",
+            [limit, ofset_c]
+        );
+
+        if (baskets.rows.length === 0) {
+            return res.status(404).send("Baskets not found");
+        }
+
+        res.status(200).json(baskets.rows);
+    } catch (err) {
+        next(err);
+    }
 };
 
 export const getBasketById = async (req, res, next) => {
